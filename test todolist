@@ -1,0 +1,62 @@
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import TODOList from './TODOList';
+
+const mockSetTodos = jest.fn();
+
+const todos = [
+  { id: 1, title: 'First Task', is_completed: false },
+  { id: 2, title: 'Second Task', is_completed: true },
+];
+
+describe('TODOList Component', () => {
+  test('renders task list', () => {
+    render(<TODOList todos={todos} setTodos={mockSetTodos} />);
+    expect(screen.getByText('First Task')).toBeInTheDocument();
+    expect(screen.getByText('Second Task')).toBeInTheDocument();
+  });
+
+  test('renders no tasks message when task list is empty', () => {
+    render(<TODOList todos={[]} setTodos={mockSetTodos} />);
+    expect(screen.getByText('No tasks in the task list')).toBeInTheDocument();
+  });
+});
+
+describe('Item Component', () => {
+  test('renders task item', () => {
+    render(<TODOList todos={todos} setTodos={mockSetTodos} />);
+    expect(screen.getByText('First Task')).toBeInTheDocument();
+  });
+
+  test('can complete a task', () => {
+    render(<TODOList todos={todos} setTodos={mockSetTodos} />);
+    const checkbox = screen.getAllByRole('checkbox')[0];
+    fireEvent.click(checkbox);
+    expect(mockSetTodos).toHaveBeenCalledWith([
+      { id: 1, title: 'First Task', is_completed: true },
+      { id: 2, title: 'Second Task', is_completed: true },
+    ]);
+  });
+
+  test('can delete a task', () => {
+    render(<TODOList todos={todos} setTodos={mockSetTodos} />);
+    const deleteButton = screen.getAllByText('Delete')[0];
+    fireEvent.click(deleteButton);
+    expect(mockSetTodos).toHaveBeenCalledWith([
+      { id: 2, title: 'Second Task', is_completed: true },
+    ]);
+  });
+
+  test('can edit a task', () => {
+    render(<TODOList todos={todos} setTodos={mockSetTodos} />);
+    const editButton = screen.getAllByText('Edit')[0];
+    fireEvent.click(editButton);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'Updated Task' } });
+    fireEvent.blur(input);
+    expect(mockSetTodos).toHaveBeenCalledWith([
+      { id: 1, title: 'Updated Task', is_completed: false },
+      { id: 2, title: 'Second Task', is_completed: true },
+    ]);
+  });
+});
